@@ -37,17 +37,48 @@ const userSchema = new Schema({
   role: {
     type: String,
     enum: ["admin", "supervisor", "agent", "candidate"],
-    default: "candidate",
-    required: true
+    default: "supervisor",
+    required: false
   },
   supervisorId: [supervisorSchema]
 
+})
+
+const convSchema = new Schema({
+  candidateId: {
+    type: Schema.Types.ObjectId,
+    required: true,
+    ref:"User"
+  },
+  agentId: {
+    type: Schema.Types.ObjectId,
+    required: false,
+    ref:"User"
+  },
+  supervisorId: {
+    type: Schema.Types.ObjectId,
+    required:true,
+    ref: "User"
+  },
+  status:{
+    type: String,
+    enum: ["open","assigned","closed"],
+    default: "open",
+    required: true,
+  },
+  createdAt: {
+    type: Schema.Types.Date,
+    required: true,
+    default: Date.now()
+  }
+  
 })
 
 export const User = mongoose.model('User', userSchema)
 
 export const Supervisor = mongoose.model('Supervisor', supervisorSchema)
 
+export const Conversation = mongoose.model("Conversations",convSchema);
 
 
 

@@ -64,7 +64,7 @@ next();
 authRoute.post("/signup", async (req, res) => {
 
   const { name, email, password,role,supervisorId } = req.body;
-
+  console.log("ss",supervisorId)
   if (!name || !email || !password || !role ) {
     return res.status(400).json({
       "success": false,
@@ -92,8 +92,8 @@ authRoute.post("/signup", async (req, res) => {
     })
   }
   if (supervisorId){
-
-      const supervisor = Supervisor.findById({supervisorId});
+    console.log("reached here")
+      const supervisor = await User.findById(supervisorId).exec();
       if (!supervisor){ 
          // todo : handle supervisor non-existing supervisor
      return res.status(404).json({
@@ -102,6 +102,7 @@ authRoute.post("/signup", async (req, res) => {
     })
       }
       if (supervisor.role !== "supervisor"){
+        console.log("rolesssss",supervisor)
           return res.status(404).json({
       success:false,
       error:"Supervisor not found"
@@ -130,6 +131,7 @@ if (existingUser){
         name,
         email,
        password:hashedPass,
+       role,
      })
      const userId = createdUser.id;
   return res.status(201).json({
