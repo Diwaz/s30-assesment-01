@@ -1,11 +1,66 @@
 import { Router } from "express";
-import { Conversation, User } from "../models";
+import { Conversation, Supervisor, User } from "../models";
 import mongoose from "mongoose";
 
 
 
 const convRoute = Router();
 
+convRoute.post("/:id/assign",async(req,res)=>{
+    const payload = req.body.payload;
+    const {agentId} = req.body;
+    const id = req.params.id;
+
+ if (payload.role !== "supervisor"){
+        return res.status(403).json({
+            success:false,
+            error:"Forbidden, insufficient permissions",
+        })
+    }
+ if (!agentId || !mongoose.Types.ObjectId.isValid(agentId)){
+        return res.status(400).json({
+            success:false,
+            error:"Agent not provided"
+        })
+    }
+ if (!id || !mongoose.Types.ObjectId.isValid(id)){
+        return res.status(400).json({
+            success:false,
+            error:"ConversationId not provided"
+        })
+    }
+    const conversation = await Conversation.findOne({_id:id});
+    if (!conversation){
+        return res.status(400).json({
+            success:false,
+            error:"Conversation not provided"
+        })
+    }
+    const agent = await User.findOne({_id:agentId});
+    if (agent?.supervisorId !== payload.userId){
+         return res.status(403).json({
+            success:false,
+            error:"Agents doesn't belong to you"
+        })       
+    }
+    if (conversation.status === "closed"){
+        return res.status(403).json({
+            success:false,
+            error:"Cannot reassign agent"
+        })
+    }
+    conversation.agentId = agentId;
+    await conversation.save();
+
+    return res.status(200).json({
+        success:true,
+        data:{
+            "conversationId":conversation.id,
+            "agentId":agentId,
+            "supervisorId":payload.userId
+        }
+    })
+})
 convRoute.post("/",async(req,res)=>{
     const payload = req.body.payload;
     const {supervisorId} = req.body;
