@@ -40,7 +40,13 @@ const userSchema = new Schema({
     default: "supervisor",
     required: false
   },
-  supervisorId: [supervisorSchema]
+  
+  supervisor: [supervisorSchema],
+  supervisorId: {
+    type:Schema.Types.ObjectId,
+    required:false,
+    ref: "Supervisor"
+  }
 
 })
 
@@ -74,11 +80,42 @@ const convSchema = new Schema({
   
 })
 
+const msgSchema = new Schema({
+  conversation: [convSchema],
+  conversationId:{
+    type:Schema.Types.ObjectId,
+    required:true,
+    ref: "Conversation"
+  },
+  senderId: {
+
+    type: Schema.Types.ObjectId,
+    required:true,
+    ref: "User"
+  },
+
+  senderRole : {
+    type:String,  
+    enum: ["admin", "supervisor", "agent", "candidate"],
+    required:true,
+  },
+  content:{
+    type:String,
+    required:true,
+  },
+  createdAt:{
+    type: Schema.Types.Date,
+    required: true,
+    default: Date.now(),
+  }
+})
+
 export const User = mongoose.model('User', userSchema)
 
 export const Supervisor = mongoose.model('Supervisor', supervisorSchema)
 
-export const Conversation = mongoose.model("Conversations",convSchema);
+export const Conversation = mongoose.model("Conversation",convSchema);
 
+export const Message =mongoose.model("Messages",msgSchema);
 
 

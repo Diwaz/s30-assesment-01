@@ -64,7 +64,7 @@ next();
 authRoute.post("/signup", async (req, res) => {
 
   const { name, email, password,role,supervisorId } = req.body;
-  console.log("ss",supervisorId)
+  // console.log("ss",supervisorId)
   if (!name || !email || !password || !role ) {
     return res.status(400).json({
       "success": false,
@@ -77,7 +77,7 @@ authRoute.post("/signup", async (req, res) => {
     // UserType.parse({email})
   }catch(err){
     if (err instanceof z.ZodError){
-    console.log("this is type error",err.issues)
+    // console.log("this is type error",err.issues)
     return res.status(400).json({
       success:false,
       error:"Invalid request schema"
@@ -92,7 +92,7 @@ authRoute.post("/signup", async (req, res) => {
     })
   }
   if (supervisorId){
-    console.log("reached here")
+    // console.log("reached here")
       const supervisor = await User.findById(supervisorId).exec();
       if (!supervisor){ 
          // todo : handle supervisor non-existing supervisor
@@ -102,10 +102,10 @@ authRoute.post("/signup", async (req, res) => {
     })
       }
       if (supervisor.role !== "supervisor"){
-        console.log("rolesssss",supervisor)
-          return res.status(404).json({
+        // console.log("rolesssss",supervisor)
+          return res.status(400).json({
       success:false,
-      error:"Supervisor not found"
+      error:"Invalid supervisor role"
     })
       }
     
@@ -126,13 +126,25 @@ if (existingUser){
   })
 }
     const hashedPass =    await bcrypt.hash(password,6)
-
-    const createdUser = await  User.create({
+    let createdUser ;
+    if (!supervisorId){
+createdUser = await  User.create({
         name,
         email,
        password:hashedPass,
        role,
      })
+    }else {
+var id = new mongoose.Types.ObjectId(supervisorId);
+      createdUser = await User.create({
+        name,
+        email,
+        password:hashedPass,
+        role,
+        supervisorId:id
+      })
+    }
+      
      const userId = createdUser.id;
   return res.status(201).json({
     "success":true,
@@ -148,7 +160,7 @@ const emailParser = z.object({
   email: z.email()
 })
 authRoute.post("/login",async(req,res)=>{
-  console.log("email",req.body)
+  // console.log("email",req.body)
   const {email,password} = req.body;
   if (!email || !password){
     return res.status(400).json({
@@ -202,7 +214,7 @@ authRoute.post("/login",async(req,res)=>{
 //       })
 //   })
 
- console.log("user found",user)
+//  console.log("user found",user)
 
  const payload = {
   userId: user.id,
@@ -225,10 +237,10 @@ authRoute.use(middlewareRoute);
 authRoute.get("/me",async (req,res)=>{
   const payload:JWT_PAYLOAD = req.body.payload;
   const id = payload.userId;
-  console.log(id)
+  // console.log(id)
 
   const user = await User.findOne({_id:id});
-  console.log("cannot find re",user)
+  // console.log("cannot find re",user)
   if (!user) return res.status(404).json({
     success:false,
     error:"User not found"
