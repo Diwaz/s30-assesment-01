@@ -38,11 +38,10 @@ const connectDB = async () =>{
 
 await connectDB();
 wss.on("connection",async (ws,req)=>{
-  const uri = url.parse(req.url,true).query
-  // const convId = uri.id;
-  const token = uri.token
   
- try{
+  try{
+    const uri = url.parse(req.url,true).query
+   const token = uri.token
    const payload = jwt.verify(token,"HGJHGJHGJFFJ");
     ws.user ={
       userId: payload.userId,
@@ -56,18 +55,20 @@ wss.on("connection",async (ws,req)=>{
   
       
       ws.on("message", async(data) => {
-        const event = JSON.parse(data);
+        let event;
+        let eventData;
+        let eventName;
         try {
+          event = JSON.parse(data);
 
         jsonParser.parse(event);
+        eventData = event.data;
+        eventName = event.event;
         }catch(err){
-           if (err instanceof z.ZodError){
             console.log("parser error")
              sendWsError(ws,"Invalid message format"); 
-    }
         }
-        const eventData = event.data;
-        if (event.event === "JOIN_CONVERSATION"){
+        if (eventName === "JOIN_CONVERSATION"){
           if (!eventData.conversationId ){
             sendWsError(ws,"Invalid ConversationID") 
             return;
@@ -117,7 +118,7 @@ wss.on("connection",async (ws,req)=>{
   // ws.send(
   //  JSON.stringify({ "conv": "JOINED"})
   // )
-  }else if (event.event === "SEND_MESSAGE"){
+  }else if (eventName === "SEND_MESSAGE"){
    const event = JSON.parse(data);
   const eventData = event.data;   
   if (ws.user.role == "candidate" || ws.user.role == "agent" ){
@@ -156,7 +157,7 @@ wss.on("connection",async (ws,req)=>{
     }) 
     console.log("msgs for this conv",MessageMap.get(eventData.conversationId))
 
-  }else if (event.event === "LEAVE_CONVERSATION"){
+  }else if (eventName === "LEAVE_CONVERSATION"){
      const event = JSON.parse(data);
     const eventData = event.data;  
     const conversationId = eventData.conversationId
@@ -192,7 +193,7 @@ wss.on("connection",async (ws,req)=>{
 
 
 
-  }else if (event.event === "CLOSE_CONVERSATION"){
+  }else if (eventName === "CLOSE_CONVERSATION"){
 const event = JSON.parse(data);
   const eventData = event.data;   
   if ( ws.user.role !== "agent" ){
